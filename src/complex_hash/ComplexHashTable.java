@@ -45,26 +45,33 @@ public class ComplexHashTable {
             return;
         }
 
-
-
-        int primaryHash = hashComplex(number, primaryHashFunction);
+        int primaryHash = primaryHashFunction.hash(number.cantorNumber());
 
         // regroup the secondary table
         Stack<ComplexNumber> rowNumbers = new Stack<>();
-        rowNumbers.push(number);
+
+        boolean duplicate = false;
         for (ComplexNumber c : table[primaryHash]) {
-            if (c != null) rowNumbers.push(c);
+            if (c != null) {
+                rowNumbers.push(c);
+                if (c.getReal() == number.getReal() && c.getImaginary() == number.getImaginary())
+                    duplicate = true;
+            }
         }
+        if(!duplicate) {
+            rowNumbers.push(number);
+            this.size++;
+        }
+
         buildSecondaryTable(primaryHash, rowNumbers.toArray(new ComplexNumber[0]));
 
-
-        this.size++;
     }
 
     private void build(int size, ComplexNumber... complexNumbers) throws Exception {
         if (complexNumbers.length > size) throw new Exception();
 
         table = new ComplexNumber[size][];
+        secondaryHashFunctions = new HashFunction[size];
         int max;
         Optional<ComplexNumber> maxO = Arrays.stream(complexNumbers).max(Comparator.comparing(ComplexNumber::cantorNumber));
         max = maxO.map(ComplexNumber::cantorNumber).orElse(6);
@@ -86,7 +93,7 @@ public class ComplexHashTable {
         // building secondary tables
         for (int i = 0; i < size; i++) {
             List<ComplexNumber> list = chains.get(i);
-            if (list.isEmpty())
+            if (list == null || list.isEmpty())
                 buildSecondaryTable(i);
             else
                 buildSecondaryTable(i, list.toArray(new ComplexNumber[0]));
@@ -102,13 +109,13 @@ public class ComplexHashTable {
             HashFunction newSecondaryFunction;
             table[primaryHash] = new ComplexNumber[(int) Math.pow(numbers.length, 2)];
 
-            if (numbers.length == 1)
-                newSecondaryFunction = new HashFunction(0, 0, 0, 0);
+            if (numbers.length <= 1)
+                newSecondaryFunction = new HashFunction(0, 0, 1, 1);
             else
                 newSecondaryFunction = getRandomHashFunction(
                         Arrays.stream(numbers).max(Comparator.comparing(ComplexNumber::cantorNumber))
                                 .orElse(new ComplexNumber(0,0)).cantorNumber(),
-                        numbers.length
+                        table[primaryHash].length
                 );
 
             // setting and checking for collisions
@@ -149,11 +156,6 @@ public class ComplexHashTable {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
-    private static int hashComplex(ComplexNumber number, HashFunction hashFunction){
-        int sum = number.getReal() + number.getImaginary();
-        int cantorNumber = (sum * (sum + 1)) / 2;
-        return hashFunction.hash(cantorNumber);
-    }
 
     private HashFunction getRandomHashFunction(int max, int m){
         int p;
@@ -185,6 +187,15 @@ public class ComplexHashTable {
             return ((a*k + b) % p) % m;
         }
 
+        @Override
+        public String toString() {
+            return "HashFunction <((" +
+                    a +
+                    "*k + " + b +
+                    ") % " + p +
+                    ") % " + m +
+                    '>';
+        }
     }
 
     private boolean isPrime(int number) {
@@ -201,6 +212,19 @@ public class ComplexHashTable {
             }
         }
         return numbers;
+    }
+
+    public void print(){
+        System.out.println("\nTable of " + this.size + " elements");
+        System.out.println("Primary hash function: " + primaryHashFunction.toString());
+        for (int i = 0; i < table.length; i++) {
+            System.out.print("<"+ i + "> " + secondaryHashFunctions[i] + " |");
+            for (ComplexNumber c : table[i]) {
+                System.out.print(c + "|");
+            }
+            System.out.print('\n');
+        }
+
     }
 
 }
