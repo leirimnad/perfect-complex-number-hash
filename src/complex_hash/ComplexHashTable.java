@@ -1,21 +1,75 @@
 package complex_hash;
 
-
-import java.util.Random;
+import java.util.*;
 import java.util.stream.IntStream;
 
+
 public class ComplexHashTable {
+    private final ComplexNumber[][] table;
+    private final HashFunction primaryHashFunction;
+    private HashFunction[] secondaryHashFunctions;
+    private int size = 0;
 
     public ComplexHashTable() {
-        // ...
+        table = new ComplexNumber[8][];
+        primaryHashFunction = getRandomHashFunction(100, table.length);
     }
 
     public ComplexHashTable(ComplexNumber... complexNumbers) {
-        // ...
+        table = new ComplexNumber[Math.max(8, complexNumbers.length * 2)][];
+        ComplexNumber max = Arrays.stream(complexNumbers).max(Comparator.comparing(ComplexNumber::cantorNumber)).get();
+        primaryHashFunction = getRandomHashFunction(max.cantorNumber(), table.length);
     }
 
     public void push(ComplexNumber number){
-        // ...
+        // increase the size if there are too many elements
+        if (size+1 > table.length * 0.75f) {
+            // this.increaseSize();
+        }
+
+        int primaryHash = hashComplex(number, primaryHashFunction);
+
+        // regroup the secondary table
+        Stack<ComplexNumber> rowNumbers = new Stack<>();
+        rowNumbers.push(number);
+        for (ComplexNumber c : table[primaryHash]) {
+            if (c != null) rowNumbers.push(c);
+        }
+
+        while (true) {
+            // searching for a new secondary function
+            HashFunction newSecondaryFunction;
+            table[primaryHash] = new ComplexNumber[(int) Math.pow(rowNumbers.size(), 2)];
+
+            if (rowNumbers.size() == 1)
+                newSecondaryFunction = new HashFunction(0, 0, 0, 0);
+            else
+                newSecondaryFunction = getRandomHashFunction(
+                        Collections.max(rowNumbers).cantorNumber(),
+                        rowNumbers.size()
+                );
+
+            // setting and checking for collisions
+            boolean collision = false;
+            while (!rowNumbers.isEmpty()) {
+                ComplexNumber num = rowNumbers.pop();
+                int secondaryHash = newSecondaryFunction.hash(num.cantorNumber());
+
+                if (table[primaryHash][secondaryHash] != null) {
+                    collision = true;
+                    break;
+                }
+
+                table[primaryHash][secondaryHash] = num;
+            }
+
+            if (!collision) {
+                secondaryHashFunctions[primaryHash] = newSecondaryFunction;
+                break;
+            }
+        }
+
+        this.size++;
     }
 
     public boolean contains(ComplexNumber number){

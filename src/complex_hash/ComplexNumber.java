@@ -1,6 +1,6 @@
 package complex_hash;
 
-public class ComplexNumber {
+public class ComplexNumber implements Comparable<ComplexNumber> {
     private int real, imaginary;
 
     public ComplexNumber(int real, int imaginary) {
@@ -22,5 +22,14 @@ public class ComplexNumber {
 
     public void setImaginary(int imaginary) {
         this.imaginary = imaginary;
+    }
+
+    public int cantorNumber(){
+        return ((real+imaginary)*(real+imaginary+1))/2;
+    }
+
+    @Override
+    public int compareTo(ComplexNumber o) {
+        return this.cantorNumber() - o.cantorNumber();
     }
 }
