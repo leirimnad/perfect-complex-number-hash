@@ -25,7 +25,7 @@ public class ComplexNumber implements Comparable<ComplexNumber> {
     }
 
     public int cantorNumber(){
-        return ((real+imaginary)*(real+imaginary+1))/2;
+        return Math.abs(((real+imaginary)*(real+imaginary+1))/2);
     }
 
     @Override
