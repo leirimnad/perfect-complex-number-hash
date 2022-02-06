@@ -9,7 +9,11 @@ public class ComplexHashTest {
         ComplexHashTable table = new ComplexHashTable();
         Random random = new Random();
         for (int i = 0; i < 50; i++) {
-            table.push(new ComplexNumber(random.nextInt(20), random.nextInt(20)));
+            int a = random.nextInt(20);
+            int b = random.nextInt(20);
+//            if(random.nextBoolean()) a *= -1;
+//            if(random.nextBoolean()) b *= -1;
+            table.push(new ComplexNumber(a, b));
         }
 
         table.print();

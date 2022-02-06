@@ -1,5 +1,6 @@
 package complex_hash;
 
+
 public class ComplexNumber implements Comparable<ComplexNumber> {
     private int real, imaginary;
 
@@ -40,5 +41,12 @@ public class ComplexNumber implements Comparable<ComplexNumber> {
                 'i';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ComplexNumber that = (ComplexNumber) o;
+        return real == that.real && imaginary == that.imaginary;
+    }
 
 }
