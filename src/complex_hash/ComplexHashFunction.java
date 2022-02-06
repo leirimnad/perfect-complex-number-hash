@@ -29,21 +29,25 @@ public class ComplexHashFunction {
     }
 
     public static ComplexHashFunction getRandomHashFunction(int m, ComplexNumber... numbers){
-        int p;
+        Random random = new Random();
 
         Optional<ComplexNumber> maxO = Arrays.stream(numbers).max(
                 Comparator.comparingInt(a -> Math.max(a.getReal(), a.getImaginary()))
         );
         ComplexNumber max = maxO.orElse(new ComplexNumber(1,1));
 
-        for (int i = Math.max(Math.max(max.getReal(), max.getImaginary()), m)+1;; i++) {
-            if (isPrime(i)) {
-                p = i;
-                break;
-            }
-        }
+        int p = Math.max(Math.max(max.getReal(), max.getImaginary()), m);
 
-        Random random = new Random();
+        do {
+            for (int i = p+1;; i++) {
+                if (isPrime(i)) {
+                    p = i;
+                    break;
+                }
+            }
+        } while (random.nextBoolean());
+
+
         int a = random.nextInt(p - 1) + 1;
 
         return new ComplexHashFunction(a, p, m);

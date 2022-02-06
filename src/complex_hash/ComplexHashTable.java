@@ -8,23 +8,14 @@ public class ComplexHashTable {
     private ComplexHashFunction primaryHashFunction;
     private ComplexHashFunction[] secondaryHashFunctions;
     private int size = 0;
-    private int maxCantor = 0;
-    private final float increaseOccupancy = 1.21f;
+    private final float increaseOccupancy = 0.75f;
 
     public ComplexHashTable() {
-        try {
-            build(8);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        build(8);
     }
 
     public ComplexHashTable(ComplexNumber... complexNumbers) {
-        try {
-            build(Math.max(8, complexNumbers.length * 2), complexNumbers);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        build(Math.max(8, complexNumbers.length * 2), complexNumbers);
     }
 
     public void push(ComplexNumber number){
@@ -34,18 +25,6 @@ public class ComplexHashTable {
         // increase the size if there are too many elements
         if (size+1 > table.length * increaseOccupancy) {
             this.increaseSize();
-        }
-
-        // rebuild a table if new value is max
-        if (number.cantorNumber() > this.maxCantor){
-            maxCantor = number.cantorNumber();
-            List<ComplexNumber> numbers = getList();
-            numbers.add(number);
-
-            try {
-                build(this.table.length, numbers.toArray(new ComplexNumber[0]));
-            } catch (Exception e) { e.printStackTrace(); }
-            return;
         }
 
         int primaryHash = primaryHashFunction.hash(number);
@@ -65,8 +44,7 @@ public class ComplexHashTable {
 
     }
 
-    private void build(int size, ComplexNumber... complexNumbers) throws Exception {
-        if (complexNumbers.length > size) throw new Exception();
+    private void build(int size, ComplexNumber... complexNumbers)  {
 
         table = new ComplexNumber[size][];
         secondaryHashFunctions = new ComplexHashFunction[size];
