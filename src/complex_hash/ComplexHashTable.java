@@ -123,6 +123,25 @@ public class ComplexHashTable {
         return table[primaryHash][secondaryHash].equals(number);
     }
 
+    public void delete(ComplexNumber number){
+        int primaryHash = primaryHashFunction.hash(number);
+        if (secondaryHashFunctions[primaryHash] == null) return;
+        int secondaryHash = secondaryHashFunctions[primaryHash].hash(number);
+
+        if (       table.length <= primaryHash
+                || table[primaryHash].length <= secondaryHash
+                || table[primaryHash][secondaryHash] == null
+        ) return;
+
+        table[primaryHash][secondaryHash] = null;
+        size--;
+
+        if (size < 0.2f * table.length && table.length > 8){
+            List<ComplexNumber> list = this.getList();
+            build(Math.max(8, list.size() * 2), list.toArray(new ComplexNumber[0]));
+        }
+    }
+
     private void increaseSize(){
         List<ComplexNumber> numbers = this.getList();
 
