@@ -1,6 +1,7 @@
 package complex_hash;
 
 import java.util.*;
+import java.util.stream.IntStream;
 
 
 public class ComplexHashTable {
@@ -8,52 +9,45 @@ public class ComplexHashTable {
     private ComplexHashFunction primaryHashFunction;
     private ComplexHashFunction[] secondaryHashFunctions;
     private int size = 0;
-    private final float increaseOccupancy = 0.75f;
+    private final boolean preliminaryDuplicateCheck = false;
+    private int p;
 
     public ComplexHashTable() {
-        build(8);
+        build();
     }
 
     public ComplexHashTable(ComplexNumber... complexNumbers) {
-        build(Math.max(8, complexNumbers.length * 2), complexNumbers);
+        build(complexNumbers);
     }
 
-    public void push(ComplexNumber number){
-        // skip if one is cached
-        if (this.contains(number)) return;
+    private void build(ComplexNumber... complexNumbers)  {
+        List<ComplexNumber> numbers = new ArrayList<>();
 
-        // increase the size if there are too many elements
-        if (size+1 > table.length * increaseOccupancy) {
-            this.increaseSize();
-        }
-
-        int primaryHash = primaryHashFunction.hash(number);
-
-        // regroup the secondary table
-        Stack<ComplexNumber> rowNumbers = new Stack<>();
-        for (ComplexNumber c : table[primaryHash]) {
-            if (c != null) {
-                rowNumbers.push(c);
+        // preliminary duplicate check
+        if (!preliminaryDuplicateCheck) numbers = Arrays.asList(complexNumbers);
+        else {
+            for (ComplexNumber num : complexNumbers) {
+                boolean duplicate = false;
+                for (ComplexNumber num2 : numbers) {
+                    if (num.equals(num2)){
+                        duplicate = true;
+                        break;
+                    }
+                }
+                if (!duplicate) numbers.add(num);
             }
         }
-        rowNumbers.push(number);
 
-        buildSecondaryTable(primaryHash, rowNumbers.toArray(new ComplexNumber[0]));
-
-        size++;
-
-    }
-
-    private void build(int size, ComplexNumber... complexNumbers)  {
-
-        table = new ComplexNumber[size][];
-        secondaryHashFunctions = new ComplexHashFunction[size];
-        primaryHashFunction = ComplexHashFunction.getRandomHashFunction(size, complexNumbers);
+        int m = numbers.size();
+        p = generateP(m);
+        table = new ComplexNumber[m][];
+        secondaryHashFunctions = new ComplexHashFunction[m];
+        primaryHashFunction = ComplexHashFunction.getRandomHashFunction(m, p);
 
         // getting chains for the new table
-        List<List<ComplexNumber>> chains = new ArrayList<>(Collections.nCopies(size, null));
+        List<List<ComplexNumber>> chains = new ArrayList<>(Collections.nCopies(m, null));
 
-        for (ComplexNumber number : complexNumbers) {
+        for (ComplexNumber number : numbers) {
             int hash = primaryHashFunction.hash(number);
             List<ComplexNumber> list = chains.get(hash);
             if (list == null) {
@@ -64,15 +58,26 @@ public class ComplexHashTable {
         }
 
         // building secondary tables
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < m; i++) {
             List<ComplexNumber> list = chains.get(i);
             if (list == null || list.isEmpty())
                 buildSecondaryTable(i);
             else
                 buildSecondaryTable(i, list.toArray(new ComplexNumber[0]));
         }
+    }
 
-        this.size = complexNumbers.length;
+    private int generateP(int m){
+        int p = m;
+
+        for (int i = p+1;; i++) {
+            if (isPrime(i)) {
+                p = i;
+                break;
+            }
+        }
+
+        return p;
     }
 
     private void buildSecondaryTable(int primaryHash, ComplexNumber... numbers){
@@ -80,17 +85,36 @@ public class ComplexHashTable {
         while (true) {
             // searching for a new secondary function
             ComplexHashFunction newSecondaryFunction;
-            table[primaryHash] = new ComplexNumber[(int) Math.pow(numbers.length, 2)];
+
+            List<ComplexNumber> duplicateFiltered = new ArrayList<>();
+
+            // duplicate check
+            if (preliminaryDuplicateCheck) duplicateFiltered = Arrays.asList(numbers);
+            else {
+                for (ComplexNumber num : numbers) {
+                    boolean duplicate = false;
+                    for (ComplexNumber num2 : duplicateFiltered) {
+                        if (num.equals(num2)){
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate) duplicateFiltered.add(num);
+                }
+            }
+
+
+            table[primaryHash] = new ComplexNumber[(int) Math.pow(duplicateFiltered.size(), 2)];
 
             if (numbers.length <= 1)
-                newSecondaryFunction = new ComplexHashFunction(0, 1, 1);
+                newSecondaryFunction = new ComplexHashFunction(0,0, 1, 1);
             else
-                newSecondaryFunction = ComplexHashFunction.getRandomHashFunction(table[primaryHash].length, numbers);
+                newSecondaryFunction = ComplexHashFunction.getRandomHashFunction(table[primaryHash].length, p);
 
             // setting and checking for collisions
             boolean collision = false;
 
-            for (ComplexNumber num : numbers) {
+            for (ComplexNumber num : duplicateFiltered) {
                 int secondaryHash = newSecondaryFunction.hash(num);
 
                 if (table[primaryHash][secondaryHash] != null) {
@@ -99,6 +123,7 @@ public class ComplexHashTable {
                 }
 
                 table[primaryHash][secondaryHash] = num;
+                size++;
             }
 
             if (!collision) {
@@ -121,33 +146,6 @@ public class ComplexHashTable {
         ) return false;
 
         return table[primaryHash][secondaryHash].equals(number);
-    }
-
-    public void delete(ComplexNumber number){
-        int primaryHash = primaryHashFunction.hash(number);
-        if (secondaryHashFunctions[primaryHash] == null) return;
-        int secondaryHash = secondaryHashFunctions[primaryHash].hash(number);
-
-        if (       table.length <= primaryHash
-                || table[primaryHash].length <= secondaryHash
-                || table[primaryHash][secondaryHash] == null
-        ) return;
-
-        table[primaryHash][secondaryHash] = null;
-        size--;
-
-        if (size < 0.2f * table.length && table.length > 8){
-            List<ComplexNumber> list = this.getList();
-            build(Math.max(8, list.size() * 2), list.toArray(new ComplexNumber[0]));
-        }
-    }
-
-    private void increaseSize(){
-        List<ComplexNumber> numbers = this.getList();
-
-        try {
-            build((int) (table.length * 1.5), numbers.toArray(new ComplexNumber[0]));
-        } catch (Exception e) { e.printStackTrace(); }
     }
 
     private List<ComplexNumber> getList(){
@@ -175,6 +173,12 @@ public class ComplexHashTable {
             System.out.println(text);
         }
 
+    }
+
+    private static boolean isPrime(int number) {
+        return number > 1
+                && IntStream.rangeClosed(2, (int) Math.sqrt(number))
+                .noneMatch(n -> (number % n == 0));
     }
 
 }

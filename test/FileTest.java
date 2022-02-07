@@ -2,9 +2,7 @@ import complex_hash.ComplexHashTable;
 import complex_hash.ComplexNumber;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +13,6 @@ public class FileTest {
         FileReader fr = new FileReader(file);
         BufferedReader reader = new BufferedReader(fr);
 
-        ComplexHashTable table = new ComplexHashTable();
         List<ComplexNumber> numbers = new ArrayList<>();
 
         String line = reader.readLine();
@@ -24,14 +21,14 @@ public class FileTest {
 
             ComplexNumber complexNumber = parseComplex(line);
             numbers.add(complexNumber);
-            table.push(complexNumber);
 
             line = reader.readLine();
         }
+        ComplexHashTable table = new ComplexHashTable(numbers.toArray(new ComplexNumber[0]));
         table.print();
 
         Random random = new Random();
-        ComplexNumber randomFromList = numbers.get(random.nextInt(numbers.size()));
+        ComplexNumber randomFromList = (ComplexNumber) numbers.toArray()[random.nextInt(numbers.size())];
         System.out.println("\nRandomly picked element: "+randomFromList);
         System.out.println("table.contains(): "+table.contains(randomFromList));
         ComplexNumber randomNumber = new ComplexNumber(random.nextInt(1000), random.nextInt(1000));
