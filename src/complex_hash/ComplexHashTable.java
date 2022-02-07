@@ -114,6 +114,7 @@ public class ComplexHashTable {
             // setting and checking for collisions
             boolean collision = false;
 
+            int c = 0;
             for (ComplexNumber num : duplicateFiltered) {
                 int secondaryHash = newSecondaryFunction.hash(num);
 
@@ -123,21 +124,21 @@ public class ComplexHashTable {
                 }
 
                 table[primaryHash][secondaryHash] = num;
-                size++;
+                c++;
             }
 
             if (!collision) {
                 secondaryHashFunctions[primaryHash] = newSecondaryFunction;
+                size += c;
                 break;
             }
         }
 
     }
 
-
     public boolean contains(ComplexNumber number){
         int primaryHash = primaryHashFunction.hash(number);
-        if (secondaryHashFunctions[primaryHash] == null) return false;
+        if (table.length <= primaryHash || secondaryHashFunctions[primaryHash] == null) return false;
         int secondaryHash = secondaryHashFunctions[primaryHash].hash(number);
 
         if (       table.length <= primaryHash
@@ -146,16 +147,6 @@ public class ComplexHashTable {
         ) return false;
 
         return table[primaryHash][secondaryHash].equals(number);
-    }
-
-    private List<ComplexNumber> getList(){
-        List<ComplexNumber> numbers = new ArrayList<>();
-        for (ComplexNumber[] complexNumbers : table) {
-            for (ComplexNumber c : complexNumbers) {
-                if (c != null) numbers.add(c);
-            }
-        }
-        return numbers;
     }
 
     public void print(){

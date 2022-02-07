@@ -28,9 +28,13 @@ public class FileTest {
         table.print();
 
         Random random = new Random();
-        ComplexNumber randomFromList = (ComplexNumber) numbers.toArray()[random.nextInt(numbers.size())];
-        System.out.println("\nRandomly picked element: "+randomFromList);
-        System.out.println("table.contains(): "+table.contains(randomFromList));
+
+        if (numbers.size() > 0){
+            ComplexNumber randomFromList = (ComplexNumber) numbers.toArray()[random.nextInt(numbers.size())];
+            System.out.println("\nRandomly picked element: "+randomFromList);
+            System.out.println("table.contains(): "+table.contains(randomFromList));
+        }
+
         ComplexNumber randomNumber = new ComplexNumber(random.nextInt(1000), random.nextInt(1000));
         System.out.println("\nRandomly generated element: "+randomNumber);
         System.out.println("table.contains(): "+table.contains(randomNumber));
